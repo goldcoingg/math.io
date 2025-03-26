@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отправка задачи</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Arial", sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to right, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input, textarea {
+            background: #f0f0f0;
+            resize: none;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #5563c1;
+        }
+
+        #status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #333;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #status.success {
+            color: #28a745;
+            font-weight: bold;
+            opacity: 1;
+        }
+
+        #status.error {
+            color: #dc3545;
+            font-weight: bold;
+            opacity: 1;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        .sending {
+            animation: shake 0.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Отправь задачу</h1>
+        <p>Загрузите фото задачи, опишите суть и укажите свой Telegram-юзернейм.</p>
+        
+        <form id="taskForm">
+            <input type="text" id="username" placeholder="Ваш Telegram @username" required>
+            <textarea id="description" rows="4" placeholder="Кратко опишите суть задачи..." required></textarea>
+            <input type="file" id="photo" accept="image/*" required>
+            <button type="submit">Отправить</button>
+        </form>
+        
+        <p id="status"></p>
+    </div>
+
+    <script>
+        document.getElementById("taskForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            
+            let username = document.getElementById("username").value;
+            let description = document.getElementById("description").value;
+            let photo = document.getElementById("photo").files[0];
+            let statusText = document.getElementById("status");
+
+            if (!username.startsWith("@")) {
+                statusText.textContent = "Введите ваш Telegram username с @";
+                statusText.className = "error";
+                statusText.style.opacity = 1;
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("chat_id", "6610925597");
+            formData.append("caption", `Новая задача от ${username}\n\nОписание: ${description}`);
+            formData.append("photo", photo);
+
+            statusText.textContent = "Отправка...";
+            statusText.className = "sending";
+            statusText.style.opacity = 1;
+
+            let response = await fetch(`https://api.telegram.org/bot7876494896:AAFiDOnIImOmGJeyzss9CLJJIEePq_e87ys/sendPhoto`, {
+                method: "POST",
+                body: formData
+            });
+
+            let result = await response.json();
+            statusText.classList.remove("sending");
+
+            if (result.ok) {
+                statusText.textContent = "✅ Задача отправлена! С вами скоро свяжутся.";
+                statusText.className = "success";
+            } else {
+                statusText.textContent = "❌ Ошибка отправки. Попробуйте ещё раз.";
+                statusText.className = "error";
+            }
+        });
+    </script>
+</body>
+</html>
